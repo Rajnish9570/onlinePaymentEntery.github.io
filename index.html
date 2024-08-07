@@ -6,12 +6,26 @@
     <title>Daily Payment Entry</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e0e0e0;
+            color: #333;
         }
         h1 {
             text-align: center;
+            padding: 20px;
+            margin: 0;
+            background-color: #2196F3;
+            color: #fff;
+        }
+        #container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         table {
             width: 100%;
@@ -22,7 +36,7 @@
             border: 1px solid #ddd;
         }
         th, td {
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         th {
@@ -31,21 +45,60 @@
         form {
             display: flex;
             flex-direction: column;
-            width: 300px;
+            width: 100%;
             margin: 0 auto;
         }
         input, button, select {
-            margin: 5px 0;
+            margin: 10px 0;
             padding: 10px;
             font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input:focus, button:focus, select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        button {
+            background-color: #2196F3;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1976D2;
         }
         #search {
             margin: 20px auto;
             display: block;
             width: 50%;
         }
-        .action-buttons button {
-            margin-right: 5px;
+        .action-buttons {
+            position: relative;
+            display: inline-block;
+        }
+        .action-buttons .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 120px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+        .action-buttons .dropdown-content button {
+            background-color: #fff;
+            color: #333;
+            padding: 10px 16px;
+            text-align: left;
+            border: none;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .action-buttons .dropdown-content button:hover {
+            background-color: #f1f1f1;
+        }
+        .action-buttons:hover .dropdown-content {
+            display: block;
         }
         .total-amount {
             font-weight: bold;
@@ -54,15 +107,16 @@
 </head>
 <body>
     <h1>Daily Payment Entry</h1>
-    <input type="text" id="search" placeholder="Search by customer name">
-
-    <form id="paymentForm">
-        <input type="text" id="customerName" placeholder="Customer Name" required>
-        <input type="number" id="amountPaid" placeholder="Amount Paid" required>
-        <button type="submit">Add Entry</button>
-    </form>
-    <button onclick="exportToCSV()">Export to CSV</button>
-    <div id="entries"></div>
+    <div id="container">
+        <input type="text" id="search" placeholder="Search by customer name">
+        <form id="paymentForm">
+            <input type="text" id="customerName" placeholder="Customer Name" required>
+            <input type="number" id="amountPaid" placeholder="Amount Paid" required>
+            <button type="submit">Add Entry</button>
+        </form>
+        <button onclick="exportToCSV()">Export to CSV</button>
+        <div id="entries"></div>
+    </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -152,20 +206,29 @@
 
             const actionsCell = newRow.insertCell(2);
             actionsCell.className = 'action-buttons';
+            const actionIcon = document.createElement('span');
+            actionIcon.innerHTML = '☰';
+            actionsCell.appendChild(actionIcon);
+
+            const dropdownContent = document.createElement('div');
+            dropdownContent.className = 'dropdown-content';
+            
             const deleteButton = document.createElement('button');
             deleteButton.innerText = 'Delete';
             deleteButton.onclick = function() {
                 tbody.deleteRow(newRow.rowIndex - 1);
                 deleteEntry(entry);
             };
-            actionsCell.appendChild(deleteButton);
+            dropdownContent.appendChild(deleteButton);
 
             const editButton = document.createElement('button');
             editButton.innerText = 'Edit';
             editButton.onclick = function() {
                 editEntry(entry, newRow.rowIndex - 1, tbody);
             };
-            actionsCell.appendChild(editButton);
+            dropdownContent.appendChild(editButton);
+
+            actionsCell.appendChild(dropdownContent);
         }
 
         function deleteEntry(entry) {
