@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Payment records</title>
+    <title>Online Payment Records</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -76,6 +76,13 @@
             position: relative;
             display: inline-block;
         }
+        .action-buttons span {
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: #fff;
+            border-radius: 4px;
+        }
         .action-buttons .dropdown-content {
             display: none;
             position: absolute;
@@ -104,10 +111,30 @@
         .total-amount {
             font-weight: bold;
         }
+        @media (max-width: 600px) {
+            h3 {
+                font-size: 18px;
+                padding: 10px;
+            }
+            #container {
+                padding: 10px;
+                margin: 10px;
+            }
+            input, button {
+                font-size: 14px;
+                padding: 8px;
+            }
+            table, th, td {
+                font-size: 14px;
+            }
+            #search {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h3>Daily online Payment recods</h3>
+    <h3>Daily Online Payment Records</h3>
     <div id="container">
         <input type="text" id="search" placeholder="Search by customer name">
         <form id="paymentForm">
