@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Payment Entry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+            margin: 0 auto;
+        }
+        input, button, select {
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #search {
+            margin: 20px auto;
+            display: block;
+            width: 50%;
+        }
+        .action-buttons button {
+            margin-right: 5px;
+        }
+        .total-amount {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Daily Payment Entry</h1>
+    <input type="text" id="search" placeholder="Search by customer name">
+
+    <form id="paymentForm">
+        <input type="text" id="customerName" placeholder="Customer Name" required>
+        <input type="number" id="amountPaid" placeholder="Amount Paid" required>
+        <button type="submit">Add Entry</button>
+    </form>
+    <button onclick="exportToCSV()">Export to CSV</button>
+    <div id="entries"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEntries();
+            document.getElementById('search').addEventListener('input', filterEntries);
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const date = new Date().toISOString().split('T')[0];
+            const customerName = document.getElementById('customerName').value;
+            const amountPaid = document.getElementById('amountPaid').value;
+
+            const entry = { date, customerName, amountPaid };
+
+            let entries = JSON.parse(localStorage.getItem('paymentEntries')) || [];
+            entries.push(entry);
+            localStorage.setItem('paymentEntries', JSON.stringify(entries));
+
+            addEntryToTable(entry);
+            document.getElementById('paymentForm').reset();
+        });
+
+        function loadEntries() {
+            const entries = JSON.parse(localStorage.getItem('paymentEntries')) || [];
+            const groupedEntries = groupByDate(entries);
+            for (const date in groupedEntries) {
+                createDateSection(date, groupedEntries[date]);
+            }
+        }
+
+        function groupByDate(entries) {
+            return entries.reduce((acc, entry) => {
+                (acc[entry.date] = acc[entry.date] || []).push(entry);
+                return acc;
+            }, {});
+        }
+
+        function createDateSection(date, entries) {
+            const entriesDiv = document.getElementById('entries');
+            const dateSection = document.createElement('div');
+            dateSection.id = `section-${date}`;
+            const dateHeader = document.createElement('h2');
+            dateHeader.innerText = date;
+            dateSection.appendChild(dateHeader);
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<th>Customer Name</th><th>Amount Paid</th><th>Actions</th>';
+            thead.appendChild(tr);
+            table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            entries.forEach(entry => {
+                addRowToTable(tbody, entry);
+            });
+            table.appendChild(tbody);
+            dateSection.appendChild(table);
+
+            const totalAmount = entries.reduce((sum, entry) => sum + parseFloat(entry.amountPaid), 0);
+            const totalDiv = document.createElement('div');
+            totalDiv.className = 'total-amount';
+            totalDiv.innerText = `Total Amount: ${totalAmount}`;
+            dateSection.appendChild(totalDiv);
+
+            entriesDiv.appendChild(dateSection);
+        }
+
+        function addEntryToTable(entry) {
+            let section = document.getElementById(`section-${entry.date}`);
+            if (!section) {
+                createDateSection(entry.date, [entry]);
+            } else {
+                const table = section.getElementsByTagName('tbody')[0];
+                addRowToTable(table, entry);
+
+                const totalDiv = section.getElementsByClassName('total-amount')[0];
+                const totalAmount = parseFloat(totalDiv.innerText.split(': ')[1]) + parseFloat(entry.amountPaid);
+                totalDiv.innerText = `Total Amount: ${totalAmount}`;
+            }
+        }
+
+        function addRowToTable(tbody, entry) {
+            const newRow = tbody.insertRow();
+            newRow.insertCell(0).innerText = entry.customerName;
+            newRow.insertCell(1).innerText = entry.amountPaid;
+
+            const actionsCell = newRow.insertCell(2);
+            actionsCell.className = 'action-buttons';
+            const deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Delete';
+            deleteButton.onclick = function() {
+                tbody.deleteRow(newRow.rowIndex - 1);
+                deleteEntry(entry);
+            };
+            actionsCell.appendChild(deleteButton);
+
+            const editButton = document.createElement('button');
+            editButton.innerText = 'Edit';
+            editButton.onclick = function() {
+                editEntry(entry, newRow.rowIndex - 1, tbody);
+            };
+            actionsCell.appendChild(editButton);
+        }
+
+        function deleteEntry(entry) {
+            let entries = JSON.parse(localStorage.getItem('paymentEntries')) || [];
+            entries = entries.filter(e => !(e.date === entry.date && e.customerName === entry.customerName && e.amountPaid === entry.amountPaid));
+            localStorage.setItem('paymentEntries', JSON.stringify(entries));
+
+            let section = document.getElementById(`section-${entry.date}`);
+            const totalDiv = section.getElementsByClassName('total-amount')[0];
+            const totalAmount = parseFloat(totalDiv.innerText.split(': ')[1]) - parseFloat(entry.amountPaid);
+            totalDiv.innerText = `Total Amount: ${totalAmount}`;
+        }
+
+        function editEntry(entry, rowIndex, tbody) {
+            document.getElementById('customerName').value = entry.customerName;
+            document.getElementById('amountPaid').value = entry.amountPaid;
+
+            deleteEntry(entry);
+            tbody.deleteRow(rowIndex);
+        }
+
+        function filterEntries() {
+            const filter = document.getElementById('search').value.toLowerCase();
+            const entriesDiv = document.getElementById('entries');
+            const sections = entriesDiv.getElementsByTagName('div');
+            
+            for (let section of sections) {
+                const rows = section.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                let matchSection = false;
+                for (let row of rows) {
+                    const cells = row.getElementsByTagName('td');
+                    let match = false;
+                    for (let j = 0; j < cells.length - 1; j++) {
+                        if (cells[j].innerText.toLowerCase().includes(filter)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchSection = true;
+                }
+                section.style.display = matchSection ? '' : 'none';
+            }
+        }
+
+        function exportToCSV() {
+            const entries = JSON.parse(localStorage.getItem('paymentEntries')) || [];
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Customer Name,Amount Paid\n";
+
+            entries.forEach(function(rowArray) {
+                let row = `${rowArray.date},${rowArray.customerName},${rowArray.amountPaid}`;
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "payment_entries.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+</html>
