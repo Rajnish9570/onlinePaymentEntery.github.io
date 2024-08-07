@@ -70,19 +70,23 @@
         #search {
             margin: 20px auto;
             display: block;
-            width: 70%;
-            
+            width: 80%;
         }
         .action-buttons {
             position: relative;
             display: inline-block;
         }
-        .action-buttons span {
-            padding: 5px 10px;
-            cursor: pointer;
+        .action-buttons button {
             background-color: #2196F3;
             color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
             border-radius: 4px;
+            font-size: 14px;
+        }
+        .action-buttons button:hover {
+            background-color: #1976D2;
         }
         .action-buttons .dropdown-content {
             display: none;
@@ -235,9 +239,9 @@
 
             const actionsCell = newRow.insertCell(2);
             actionsCell.className = 'action-buttons';
-            const actionIcon = document.createElement('span');
-            actionIcon.innerHTML = '☰';
-            actionsCell.appendChild(actionIcon);
+            const actionButton = document.createElement('button');
+            actionButton.innerHTML = '☰';
+            actionsCell.appendChild(actionButton);
 
             const dropdownContent = document.createElement('div');
             dropdownContent.className = 'dropdown-content';
